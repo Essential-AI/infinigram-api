@@ -7,5 +7,9 @@ spec:
   selector:
     app: infinigram-api
   ports:
-    - port: 80
+    - name: api
+      port: 80
       targetPort: 7860
+    - name: attribution-worker
+      port: 8080
+      targetPort: 8080

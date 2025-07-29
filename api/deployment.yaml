@@ -23,6 +23,16 @@ spec:
           volumeMounts:
             - mountPath: /mnt/infinigram-array
               name: infinigram-array
+        - name: attribution-worker
+          image: gcr.io/consus-394000/ashish/infini-gram-worker:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: infinigram-env
+          volumeMounts:
+            - mountPath: /mnt/infinigram-array
+              name: infinigram-array
       volumes:
         - name: infinigram-array
           persistentVolumeClaim:
