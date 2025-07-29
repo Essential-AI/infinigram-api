@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: infinigram-api
+spec:
+  type: ClusterIP
+  selector:
+    app: infinigram-api
+  ports:
+    - port: 80
+      targetPort: 7860

@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infinigram-cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infinigram-cache
+  template:
+    metadata:
+      labels:
+        app: infinigram-cache
+    spec:
+      containers:
+        - name: redis
+          image: redis:7
+          ports:
+            - containerPort: 6379

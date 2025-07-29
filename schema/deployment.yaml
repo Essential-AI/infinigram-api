@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infinigram-queue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infinigram-queue
+  template:
+    metadata:
+      labels:
+        app: infinigram-queue
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          env:
+            - name: POSTGRES_PASSWORD
+              value: llmz
+            - name: POSTGRES_DB
+              value: infini-gram
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: pgdata
+      volumes:
+        - name: pgdata
+          persistentVolumeClaim:
+            claimName: pgdata-pvc

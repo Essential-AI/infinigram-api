@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infinigram-attribution-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infinigram-attribution-worker
+  template:
+    metadata:
+      labels:
+        app: infinigram-attribution-worker
+    spec:
+      containers:
+        - name: attribution-worker
+          image: gcr.io/consus-394000/ashish/infini-gram-worker:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: infinigram-env
+          volumeMounts:
+            - mountPath: /mnt/infinigram-array
+              name: infinigram-array
+      volumes:
+        - name: infinigram-array
+          persistentVolumeClaim:
+            claimName: infinigram-array-pvc

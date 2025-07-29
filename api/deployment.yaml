@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infinigram-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infinigram-api
+  template:
+    metadata:
+      labels:
+        app: infinigram-api
+    spec:
+      containers:
+        - name: api
+          image: gcr.io/consus-394000/ashish/infini-gram-api:latest
+          ports:
+            - containerPort: 7860
+          envFrom:
+            - configMapRef:
+                name: infinigram-env
+          volumeMounts:
+            - mountPath: /mnt/infinigram-array
+              name: infinigram-array
+      volumes:
+        - name: infinigram-array
+          persistentVolumeClaim:
+            claimName: infinigram-array-pvc

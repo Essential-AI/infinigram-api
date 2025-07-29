@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: proxy-conf
+data:
+  default.conf: |
+    include /etc/nginx/conf.d/proxy.conf;
