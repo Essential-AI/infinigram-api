@@ -30,6 +30,14 @@ spec:
           envFrom:
             - configMapRef:
                 name: infinigram-env
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           volumeMounts:
             - mountPath: /mnt/infinigram-array
               name: infinigram-array

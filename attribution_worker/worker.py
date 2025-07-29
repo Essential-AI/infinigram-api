@@ -3,7 +3,6 @@ import os
 from typing import Any
 
 import numpy as np
-from infini_gram_processor import indexes
 from infini_gram_processor.index_mappings import AvailableInfiniGramIndexId
 from infini_gram_processor.models import (
     SpanRankingMethod,
@@ -54,6 +53,16 @@ tracer = trace.get_tracer(config.application_name)
 _TASK_NAME_KEY = "saq.task_name"
 _TASK_TAG_KEY = "saq.action"
 
+# Lazy initialization of indexes
+_indexes = None
+
+def get_indexes():
+    global _indexes
+    if _indexes is None:
+        from infini_gram_processor import indexes
+        _indexes = indexes
+    return _indexes
+
 
 async def attribution_job(
     ctx: Context,
@@ -91,6 +100,7 @@ async def attribution_job(
         if worker is not None:
             otel_span.set_attribute(SpanAttributes.MESSAGING_CLIENT_ID, worker.id)
 
+        indexes = get_indexes()
         infini_gram_index = indexes[AvailableInfiniGramIndexId(index)]
 
         attribute_result = await asyncio.to_thread(
