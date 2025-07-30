@@ -8,6 +8,10 @@ ENV PYTHONDONTWRITEBYTECODE 1
 
 # Install Python 3.12 and other dependencies
 RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y \
     python3.12 \
     python3.12-venv \
     python3.12-dev \
@@ -50,6 +54,10 @@ FROM ubuntu:22.04 as base
 
 # Install Python 3.12 and other dependencies
 RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y \
     python3.12 \
     python3.12-venv \
     python3.12-dev \
