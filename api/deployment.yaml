@@ -20,9 +20,17 @@ spec:
           envFrom:
             - configMapRef:
                 name: infinigram-env
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 7860
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           volumeMounts:
             - mountPath: /mnt/infinigram-array
-              name: infinigram-array
+              name: infinigram-array-pileval-gpt2
         - name: attribution-worker
           image: gcr.io/consus-394000/ashish/infini-gram-worker:latest
           ports:
@@ -40,8 +48,8 @@ spec:
             failureThreshold: 3
           volumeMounts:
             - mountPath: /mnt/infinigram-array
-              name: infinigram-array
+              name: infinigram-array-pileval-gpt2
       volumes:
-        - name: infinigram-array
+        - name: infinigram-array-pileval-gpt2
           persistentVolumeClaim:
-            claimName: infinigram-array-pvc
+            claimName: infinigram-array-pileval-gpt2

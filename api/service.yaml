@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: infinigram-api
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   selector:
     app: infinigram-api
   ports:

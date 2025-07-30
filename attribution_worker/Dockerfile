@@ -1,10 +1,23 @@
 # An example using multi-stage image builds to create a final image without uv.
 # Taken from https://github.com/astral-sh/uv-docker-example/blob/main/multistage.Dockerfile
 
-FROM python:3.12-slim AS builder
+FROM ubuntu:22.04 AS builder
 
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
+
+# Install Python 3.12 and other dependencies
+RUN apt-get update && apt-get install -y \
+    python3.12 \
+    python3.12-venv \
+    python3.12-dev \
+    python3-pip \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create symlinks for python and pip
+RUN ln -s /usr/bin/python3.12 /usr/bin/python
+RUN ln -s /usr/bin/pip3 /usr/bin/pip
 
 COPY --from=ghcr.io/astral-sh/uv:0.6.8 /uv /bin/uv
 
@@ -29,18 +42,28 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 
 # Then, use a final image without uv
-FROM python:3.12-slim-bookworm as base
-
-WORKDIR /app
+FROM ubuntu:22.04 as base
 
 # It is important to use the image that matches the builder, as the path to the
 # Python executable must be the same, e.g., using `python:3.11-slim-bookworm`
 # will fail.
 
-# Copy the application from the builder
-COPY --from=builder --chown=app:app /app /app
+# Install Python 3.12 and other dependencies
+RUN apt-get update && apt-get install -y \
+    python3.12 \
+    python3.12-venv \
+    python3.12-dev \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create symlinks for python and pip
+RUN ln -s /usr/bin/python3.12 /usr/bin/python
+RUN ln -s /usr/bin/pip3 /usr/bin/pip
 
 WORKDIR /app
+
+# Copy the application from the builder
+COPY --from=builder --chown=root:root /app /app
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
