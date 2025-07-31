@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+data:
+  init.sql: |
+    CREATE USER "infini-gram" WITH PASSWORD 'llmz';
+    CREATE DATABASE "infini-gram" OWNER "infini-gram";
+    GRANT ALL PRIVILEGES ON DATABASE "infini-gram" TO "infini-gram";
+    GRANT ALL ON SCHEMA public TO "infini-gram";

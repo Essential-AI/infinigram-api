@@ -12,6 +12,13 @@ spec:
       labels:
         app: infinigram-api
     spec:
+      initContainers:
+      - name: create-index-dirs
+        image: busybox
+        command: ['sh', '-c', 'mkdir -p /mnt/infinigram-array/v4_pileval_llama /mnt/infinigram-array/olmoe-mix-0924-dclm /mnt/infinigram-array/olmoe-mix-0924-nodclm /mnt/infinigram-array/v4-olmoe-0125-1b-7b-anneal-adapt /mnt/infinigram-array/v4-olmo-2-1124-13b-anneal-adapt /mnt/infinigram-array/v4-olmo-2-0325-32b-anneal-adapt /mnt/infinigram-array/v4-tulu-3-8b-adapt-llama /mnt/infinigram-array/v4-tulu-3-70b-adapt-llama /mnt/infinigram-array/v4-tulu-3-405b-adapt-llama /mnt/infinigram-array/v4-tulu-3-8b-adapt /mnt/infinigram-array/v4-tulu-3-70b-adapt /mnt/infinigram-array/v4-tulu-3-405b-adapt']
+        volumeMounts:
+        - name: infinigram-array
+          mountPath: /mnt/infinigram-array
       containers:
         - name: api
           image: gcr.io/consus-394000/ashish/infini-gram-api:latest
@@ -30,7 +37,11 @@ spec:
             failureThreshold: 3
           volumeMounts:
             - mountPath: /mnt/infinigram-array
-              name: infinigram-array-pileval-gpt2
+              name: infinigram-array
+            - mountPath: /mnt/infinigram-array/v4_pileval_llama
+              name: infinigram-array
+            - mountPath: /mnt/infinigram-array/olmoe-mix-0924-dclm
+              name: infinigram-array
         - name: attribution-worker
           image: gcr.io/consus-394000/ashish/infini-gram-worker:latest
           ports:
@@ -48,8 +59,11 @@ spec:
             failureThreshold: 3
           volumeMounts:
             - mountPath: /mnt/infinigram-array
-              name: infinigram-array-pileval-gpt2
+              name: infinigram-array
+            - mountPath: /mnt/infinigram-array/v4_pileval_llama
+              name: infinigram-array
+            - mountPath: /mnt/infinigram-array/olmoe-mix-0924-dclm
+              name: infinigram-array
       volumes:
-        - name: infinigram-array-pileval-gpt2
-          persistentVolumeClaim:
-            claimName: infinigram-array-pileval-gpt2
+        - name: infinigram-array
+          emptyDir: {}

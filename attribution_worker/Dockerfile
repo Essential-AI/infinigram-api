@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
 # Install Python 3.12 and other dependencies
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
+RUN DEBIAN_FRONTEND=noninteractive TZ=UTC apt-get update && apt-get install -y \
     software-properties-common \
     && add-apt-repository -y ppa:deadsnakes/ppa \
     && apt-get update \
@@ -53,7 +53,7 @@ FROM ubuntu:22.04 as base
 # will fail.
 
 # Install Python 3.12 and other dependencies
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
+RUN DEBIAN_FRONTEND=noninteractive TZ=UTC apt-get update && apt-get install -y \
     software-properties-common \
     && add-apt-repository -y ppa:deadsnakes/ppa \
     && apt-get update \
@@ -85,8 +85,10 @@ ENV OTEL_METRICS_EXPORTER=otlp
 ENV OTEL_EXPORTER_OTLP_ENDPOINT="http://otelcol:4318"
 ENV ENV=development
 
-CMD ["saq", "--verbose", "--web", "attribution_worker.worker_settings"]
+CMD ["python", "attribution_worker/start_worker.py"]
 
 FROM base as prod
+ENV OTEL_SERVICE_NAME=infinigram-api-worker-dev
+ENV ENV=production
 
-CMD ["saq", "--web", "attribution_worker.worker_settings"]
+CMD ["python", "attribution_worker/start_worker.py"]

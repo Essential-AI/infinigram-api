@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infinigram-queue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infinigram-queue
+  template:
+    metadata:
+      labels:
+        app: infinigram-queue
+    spec:
+      volumes:
+        - name: pgdata
+          persistentVolumeClaim:
+            claimName: pgdata-pvc
+        - name: init-script
+          configMap:
+            name: postgres-init
+      containers:
+        - name: postgres
+          image: postgres:15
+          env:
+            - name: POSTGRES_PASSWORD
+              value: llmz
+            - name: POSTGRES_DB
+              value: postgres
+            - name: PGDATA
+              value: /var/lib/postgresql/data/db
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+            - name: init-script
+              mountPath: /docker-entrypoint-initdb.d
+          ports:
+            - containerPort: 5432

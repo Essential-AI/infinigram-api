@@ -59,8 +59,24 @@ _indexes = None
 def get_indexes():
     global _indexes
     if _indexes is None:
-        from infini_gram_processor import indexes
-        _indexes = indexes
+        from infini_gram_processor import indexes as all_indexes
+        from infini_gram_processor.index_mappings import AvailableInfiniGramIndexId
+        import os
+        
+        # Only initialize indexes that have valid directories
+        available_indexes = {}
+        for index_id in AvailableInfiniGramIndexId:
+            try:
+                # Check if the index directory exists
+                index_dir = f"/mnt/infinigram-array/{index_id.value}"
+                if os.path.exists(index_dir) and os.path.isdir(index_dir):
+                    # Only try to initialize if directory exists
+                    available_indexes[index_id] = all_indexes[index_id]
+            except Exception as e:
+                print(f"Warning: Could not initialize index {index_id.value}: {e}")
+                continue
+        
+        _indexes = available_indexes
     return _indexes
 
 
