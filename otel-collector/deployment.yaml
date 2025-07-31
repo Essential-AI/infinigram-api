@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: otel-collector
-        image: otel/opentelemetry-collector:latest
+        image: otel/opentelemetry-collector-contrib:latest
         ports:
         - containerPort: 4318
           name: otlp-http
@@ -24,7 +24,7 @@ spec:
           name: metrics
         volumeMounts:
         - name: config
-          mountPath: /etc/otelcol/config.yaml
+          mountPath: /etc/otelcol-contrib/config.yaml
           subPath: config.yaml
         readinessProbe:
           httpGet:
