@@ -12,13 +12,6 @@ spec:
       labels:
         app: infinigram-api
     spec:
-      initContainers:
-      - name: create-index-dirs
-        image: busybox
-        command: ['sh', '-c', 'mkdir -p /mnt/infinigram-array/v4_pileval_llama /mnt/infinigram-array/olmoe-mix-0924-dclm /mnt/infinigram-array/olmoe-mix-0924-nodclm /mnt/infinigram-array/v4-olmoe-0125-1b-7b-anneal-adapt /mnt/infinigram-array/v4-olmo-2-1124-13b-anneal-adapt /mnt/infinigram-array/v4-olmo-2-0325-32b-anneal-adapt /mnt/infinigram-array/v4-tulu-3-8b-adapt-llama /mnt/infinigram-array/v4-tulu-3-70b-adapt-llama /mnt/infinigram-array/v4-tulu-3-405b-adapt-llama /mnt/infinigram-array/v4-tulu-3-8b-adapt /mnt/infinigram-array/v4-tulu-3-70b-adapt /mnt/infinigram-array/v4-tulu-3-405b-adapt']
-        volumeMounts:
-        - name: infinigram-array
-          mountPath: /mnt/infinigram-array
       containers:
         - name: api
           image: gcr.io/consus-394000/ashish/infini-gram-api:latest
@@ -27,21 +20,25 @@ spec:
           envFrom:
             - configMapRef:
                 name: infinigram-env
+          env:
+            - name: OTEL_TRACES_EXPORTER
+              value: "otlp"
+            - name: OTEL_METRICS_EXPORTER
+              value: "otlp"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otelcol:4318"
+            - name: ENV
+              value: "development"
           readinessProbe:
             httpGet:
               path: /health
               port: 7860
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 5
           volumeMounts:
-            - mountPath: /mnt/infinigram-array
-              name: infinigram-array
             - mountPath: /mnt/infinigram-array/v4_pileval_llama
-              name: infinigram-array
-            - mountPath: /mnt/infinigram-array/olmoe-mix-0924-dclm
-              name: infinigram-array
+              name: gcs-mount
+              readOnly: true
         - name: attribution-worker
           image: gcr.io/consus-394000/ashish/infini-gram-worker:latest
           ports:
@@ -53,17 +50,53 @@ spec:
             httpGet:
               path: /health
               port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 5
           volumeMounts:
-            - mountPath: /mnt/infinigram-array
-              name: infinigram-array
             - mountPath: /mnt/infinigram-array/v4_pileval_llama
-              name: infinigram-array
-            - mountPath: /mnt/infinigram-array/olmoe-mix-0924-dclm
-              name: infinigram-array
+              name: gcs-mount
+              readOnly: true
+        - name: gcs-fuse-sidecar
+          image: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+          command:
+            - /bin/bash
+            - -c
+            - |
+              # Install gcsfuse
+              apt-get update && apt-get install -y lsb-release curl
+              export GCSFUSE_REPO=gcsfuse-$(lsb_release -c -s)
+              echo "deb http://packages.cloud.google.com/apt $GCSFUSE_REPO main" | tee /etc/apt/sources.list.d/gcsfuse.list
+              curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+              apt-get update && apt-get install -y gcsfuse
+              
+              # Mount bucket directly to the expected path
+              mkdir -p /mnt/infinigram-array/v4_pileval_llama
+              echo "Mounting bucket infinigram_v4_pileval_llama..."
+              gcsfuse --implicit-dirs --foreground infinigram_v4_pileval_llama /mnt/infinigram-array/v4_pileval_llama &
+              MOUNT_PID=$!
+              echo "Mount process started with PID: $MOUNT_PID"
+              
+              # Wait for mount to be ready
+              sleep 10
+              echo "Checking mount..."
+              ls -la /mnt/infinigram-array/v4_pileval_llama/
+              
+              # Keep container alive
+              while kill -0 $MOUNT_PID 2>/dev/null; do
+                sleep 30
+                echo "Mount still active..."
+              done
+              echo "Mount ended, keeping container alive..."
+              while true; do sleep 60; done
+          env:
+            - name: GCS_BUCKET_NAME
+              value: "infinigram_v4_pileval_llama"
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: gcs-mount
+              mountPath: /mnt/infinigram-array/v4_pileval_llama
+              mountPropagation: Bidirectional
       volumes:
-        - name: infinigram-array
+        - name: gcs-mount
           emptyDir: {}
